@@ -30,71 +30,103 @@ async function run() {
     const toysCollection = client.db('legoWorld').collection('toys');
     const bookingCollection = client.db('legoWorld').collection('bookings');
     const toyCollection = client.db('legoWorld').collection('bookings');
-    
-    app.get('/toys', async (req, res) => {
-        const cursor = toysCollection.find();
-        const result = await cursor.toArray();
-        res.send(result);
-    })
-    app.get('/toys/:id', async (req, res) => {
-        const id = req.params.id;
-        const query = { _id: new ObjectId(id) }
-        const options = {
-          projection: { title: 1, price: 1, service_id: 1, img: 1 },
-      };
 
-        const result = await toysCollection.findOne(query,options);
-        res.send(result);
+    // Creating index on two fields
+    const indexKeys = { title: 1, category: 1 };
+    const indexOptions = { name: "titleCategory" };
+    const result = await toyCollection.createIndex(indexKeys, indexOptions);
+    console.log(result);
+
+
+    app.get("/searchByToyname/:text", async (req, res) => {
+      const searchText = req.params.text;
+      const result = await toyCollection
+        .find({
+          $or: [
+            { toyName: { $regex: searchText, $options: "i" } },
+            // { category: { $regex: searchText, $options: "i" } },
+          ],
+        })
+        .toArray();
+      res.send(result);
+    });
+
+
+
+    app.get('/toys', async (req, res) => {
+      const cursor = toysCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
     })
+    // app.get('/toys/:id', async (req, res) => {
+    //     const id = req.params.id;
+    //     const query = { _id: new ObjectId(id) }
+    //     const options = {
+    //       projection: { title: 1, price: 1, service_id: 1, img: 1 },
+    //   };
+
+    //     const result = await toysCollection.findOne(query,options);
+    //     res.send(result);
+    // })
 
     app.get('/bookings', async (req, res) => {
       console.log(req.query.email);
       let query = {};
       if (req.query?.email) {
-          query = { email: req.query.email }
+        query = { email: req.query.email }
       }
       const result = await bookingCollection.find(query).toArray();
       res.send(result);
-  })
+    })
+    app.get('/bookings/:text', async (req, res) => {
+      console.log(req.params.text);
+      if (req.params.text == "lego-city" || req.params.text == "lego-architecture" || req.params.text == "lego-cars") {
+        const result = await bookingCollection.find({ category: req.params.text }).toArray();
+        return res.send(result);
+      }
+      const result = await bookingCollection.find({}).toArray();
+      res.send(result);
+    })
+
 
     app.post('/bookings', async (req, res) => {
       const booking = req.body;
       console.log(booking);
       const result = await bookingCollection.insertOne(booking);
       res.send(result);
-  });
+    });
 
-  app.patch('/bookings/:id', async (req, res) => {
-    const id = req.params.id;
-    const filter = { _id: new ObjectId(id) };
-    const updatedBooking = req.body;
-    console.log(updatedBooking);
-    const updateDoc = {
+    app.patch('/bookings/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedBooking = req.body;
+      console.log(updatedBooking);
+      const updateDoc = {
         $set: {
-            status: updatedBooking.status
+          status: updatedBooking.status
         },
-    };
-    const result = await bookingCollection.updateOne(filter, updateDoc);
-    res.send(result);
-})
+      };
+      const result = await bookingCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    })
 
-  app.delete('/bookings/:id', async (req, res) => {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) }
-    const result = await bookingCollection.deleteOne(query);
-    res.send(result);
-})
-
-
+    app.delete('/bookings/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await bookingCollection.deleteOne(query);
+      res.send(result);
+    })
 
 
-app.get("/bookings", async (req, res) => {
-  const jobs = await toyCollection
-    .find({})
-    .sort({ createdAt: -1 })
-    .toArray();
-  res.send(jobs);
-});
+
+
+    app.get("/bookings", async (req, res) => {
+      const jobs = await toyCollection
+        .find({})
+        .sort({ createdAt: -1 })
+        .toArray();
+      res.send(jobs);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -107,10 +139,10 @@ app.get("/bookings", async (req, res) => {
 run().catch(console.dir);
 
 
-app.get('/', (req, res)=>{
-    res.send('lego world is running ')
+app.get('/', (req, res) => {
+  res.send('lego world is running ')
 })
 
-app.listen(port,()=>{
-    console.log(`lego is running on port: ${port}`);
+app.listen(port, () => {
+  console.log(`lego is running on port: ${port}`);
 })
