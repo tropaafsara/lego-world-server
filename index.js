@@ -38,6 +38,14 @@ async function run() {
     console.log(result);
 
 
+    // app.get('/toys', async (req, res) => {
+    //   const cursor = toysCollection.find();
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // })
+    
+
+
     app.get("/searchByToyname/:text", async (req, res) => {
       const searchText = req.params.text;
       const result = await toyCollection
@@ -58,6 +66,7 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     })
+
     // app.get('/toys/:id', async (req, res) => {
     //     const id = req.params.id;
     //     const query = { _id: new ObjectId(id) }
@@ -69,6 +78,9 @@ async function run() {
     //     res.send(result);
     // })
 
+    
+    
+
     app.get('/bookings', async (req, res) => {
       console.log(req.query.email);
       let query = {};
@@ -78,6 +90,15 @@ async function run() {
       const result = await bookingCollection.find(query).toArray();
       res.send(result);
     })
+
+    
+    app.get('/toys/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await bookingCollection.findOne(query);
+      res.send(result);
+  })
+
     app.get('/bookings/:text', async (req, res) => {
       console.log(req.params.text);
       if (req.params.text == "lego-city" || req.params.text == "lego-architecture" || req.params.text == "lego-cars") {
@@ -88,6 +109,7 @@ async function run() {
       res.send(result);
     })
 
+    
 
     app.post('/bookings', async (req, res) => {
       const booking = req.body;
@@ -95,6 +117,9 @@ async function run() {
       const result = await bookingCollection.insertOne(booking);
       res.send(result);
     });
+
+    
+    
 
     app.patch('/bookings/:id', async (req, res) => {
       const id = req.params.id;
@@ -109,6 +134,8 @@ async function run() {
       const result = await bookingCollection.updateOne(filter, updateDoc);
       res.send(result);
     })
+
+    
 
     app.delete('/bookings/:id', async (req, res) => {
       const id = req.params.id;
