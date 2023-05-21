@@ -31,7 +31,6 @@ async function run() {
     const bookingCollection = client.db('legoWorld').collection('bookings');
     const toyCollection = client.db('legoWorld').collection('bookings');
 
-    // Creating index on two fields
     const indexKeys = { title: 1, category: 1 };
     const indexOptions = { name: "titleCategory" };
     const result = await toyCollection.createIndex(indexKeys, indexOptions);
