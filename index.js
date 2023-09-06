@@ -63,13 +63,12 @@ async function run() {
   //
   app.get('/bookingss', async (req, res) => {
     if (req.query.email) {
-      // Handle the case when there's a query parameter (e.g., /bookingss?email=user@example.com)
       const email = req.query.email;
       const result = await bookingCollection.find({ email }).toArray();
       return res.send(result);
     } else {
-      // Handle the default case (no parameters or query)
-      const cursor = bookingCollection.find().sort({ $natural: -1 }).limit(15);
+      const cursor = bookingCollection.find();
+      // const cursor = bookingCollection.find().sort({ $natural: -1 }).limit(15);
       const result = await cursor.toArray();
       return res.send(result);
     }
@@ -77,6 +76,15 @@ async function run() {
   
   //
 
+  app.get('/bookingss/:text', async (req, res) => {
+    console.log(req.params.text);
+    if (req.params.text == "lego-city" || req.params.text == "lego-architecture" || req.params.text == "lego-cars") {
+      const result = await bookingCollection.find({ category: req.params.text }).toArray();
+      return res.send(result);
+    }
+    const result = await bookingCollection.find({}).toArray();
+    res.send(result);
+  })
 
     app.get('/toys/:id', async (req, res) => {
       const id = req.params.id;
@@ -85,15 +93,7 @@ async function run() {
       res.send(result);
   })
 
-    app.get('/bookingss/:text', async (req, res) => {
-      console.log(req.params.text);
-      if (req.params.text == "lego-city" || req.params.text == "lego-architecture" || req.params.text == "lego-cars") {
-        const result = await bookingCollection.find({ category: req.params.text }).toArray();
-        return res.send(result);
-      }
-      const result = await bookingCollection.find({}).toArray();
-      res.send(result);
-    })
+    
 
     
     // app.get("/bookingss", async (req, res) => {
@@ -104,7 +104,7 @@ async function run() {
 
     
     
-    app.post('/bookings', async (req, res) => {
+    app.post('/bookingss', async (req, res) => {
       const booking = req.body;
       console.log(booking);
       const result = await bookingCollection.insertOne(booking);
