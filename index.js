@@ -22,31 +22,21 @@ const client = new MongoClient(uri, {
 });
 
 async function run() {
-  try {
+  
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
-    const toysCollection = client.db('legoWorld').collection('toys');
     const bookingCollection = client.db('legoWorld').collection('bookings');
-    const toyCollection = client.db('legoWorld').collection('bookings');
 
     const indexKeys = { title: 1, category: 1 };
     const indexOptions = { name: "titleCategory" };
-    const result = await toyCollection.createIndex(indexKeys, indexOptions);
+    const result = await bookingCollection.createIndex(indexKeys, indexOptions);
     console.log(result);
-
-
-    // app.get('/toys', async (req, res) => {
-    //   const cursor = toysCollection.find();
-    //   const result = await cursor.toArray();
-    //   res.send(result);
-    // })
-    
 
 
     app.get("/searchByToyname/:text", async (req, res) => {
       const searchText = req.params.text;
-      const result = await toyCollection
+      const result = await bookingCollection
         .find({
           $or: [
             { toyName: { $regex: searchText, $options: "i" } },
@@ -56,48 +46,46 @@ async function run() {
         .toArray();
       res.send(result);
     });
+    
 
+    // app.get('/bookingss', async (req, res) => {
+    //   console.log(req.query.email);
 
-
-    app.get('/toys', async (req, res) => {
-      const cursor = toysCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    })
-
-    // app.get('/toys/:id', async (req, res) => {
-    //     const id = req.params.id;
-    //     const query = { _id: new ObjectId(id) }
-    //     const options = {
-    //       projection: { title: 1, price: 1, service_id: 1, img: 1 },
-    //   };
-
-    //     const result = await toysCollection.findOne(query,options);
-    //     res.send(result);
+    //   let query = {};
+    //   if (req.query?.email) {
+    //     query = { email: req.query.email}
+    //   }
+    //   const result = await bookingCollection.find(query).toArray();
+    //   res.send(result);
     // })
 
-    
-    
 
-    app.get('/bookings', async (req, res) => {
-      console.log(req.query.email);
-      let query = {};
-      if (req.query?.email) {
-        query = { email: req.query.email }
-      }
-      const result = await bookingCollection.find(query).toArray();
-      res.send(result);
-    })
+  //
+  app.get('/bookingss', async (req, res) => {
+    if (req.query.email) {
+      // Handle the case when there's a query parameter (e.g., /bookingss?email=user@example.com)
+      const email = req.query.email;
+      const result = await bookingCollection.find({ email }).toArray();
+      return res.send(result);
+    } else {
+      // Handle the default case (no parameters or query)
+      const cursor = bookingCollection.find().sort({ $natural: -1 }).limit(15);
+      const result = await cursor.toArray();
+      return res.send(result);
+    }
+  });
+  
+  //
 
-    
+
     app.get('/toys/:id', async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) }
+      const query = { _id: new ObjectId(id) }     
       const result = await bookingCollection.findOne(query);
       res.send(result);
   })
 
-    app.get('/bookings/:text', async (req, res) => {
+    app.get('/bookingss/:text', async (req, res) => {
       console.log(req.params.text);
       if (req.params.text == "lego-city" || req.params.text == "lego-architecture" || req.params.text == "lego-cars") {
         const result = await bookingCollection.find({ category: req.params.text }).toArray();
@@ -108,7 +96,14 @@ async function run() {
     })
 
     
+    // app.get("/bookingss", async (req, res) => {
+    //   const cursor =  bookingCollection.find().sort({ $natural: -1 }).limit(15);
+    //     const result = await cursor.toArray();
+    //     res.send(result)
+    // });
 
+    
+    
     app.post('/bookings', async (req, res) => {
       const booking = req.body;
       console.log(booking);
@@ -116,10 +111,8 @@ async function run() {
       res.send(result);
     });
 
-    
-    
 
-    app.patch('/bookings/:id', async (req, res) => {
+    app.patch('/bookingss/:id', async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updatedBooking = req.body;
@@ -134,24 +127,16 @@ async function run() {
     })
 
     
-
-    app.delete('/bookings/:id', async (req, res) => {
+    app.delete('/bookingss/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await bookingCollection.deleteOne(query);
       res.send(result);
     })
 
+    
 
-
-
-    app.get("/bookings", async (req, res) => {
-      const jobs = await toyCollection
-        .find({})
-        .sort({ createdAt: -1 })
-        .toArray();
-      res.send(jobs);
-    });
+    try{
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -163,7 +148,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-  res.send('lego world is running ')
+  res.send('lego world is running1 ')
 })
 
 app.listen(port, () => {
